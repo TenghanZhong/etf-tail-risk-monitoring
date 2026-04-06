@@ -45,35 +45,3 @@ The framework contains four linked components:
 4. **Safe output layer**  
    Combines the model-based estimate with conservative fallback logic to produce a safer operational VaR output and daily alert state.
 
-## Repository Structure
-
-A suggested structure is:
-
-```text
-.
-├── data/
-│   ├── multiasset_daily_10y_panel_model.csv
-│   ├── VIXCLS.csv
-│   └── zero_coupon_yield.csv
-├── outputs/
-│   ├── daily_service_outputs.csv
-│   ├── evaluation_summary.csv
-│   ├── latest_service_snapshot.csv
-│   ├── monthly_service_summary.csv
-│   └── run_config.json
-├── figures/
-│   ├── figure1_pipeline_diagram.png
-│   ├── figure3_stress_vs_nonstress.png
-│   ├── figure4a_monthly_alerts.png
-│   └── figure4b_uncertainty_heatmap.png
-├── src/
-│   ├── data_processing.py
-│   ├── quality_layer.py
-│   ├── model.py
-│   ├── uncertainty.py
-│   ├── fallback.py
-│   ├── evaluation.py
-│   └── plots.py
-├── main.py
-├── requirements.txt
-└── README.md
