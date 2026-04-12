@@ -1,47 +1,69 @@
 # ETF Tail-Risk Monitoring
 
-Code and experiments for the paper **"Robust ETF Tail-Risk Monitoring under Data Degradation and Market Uncertainty."**
+Code and experimental materials for the paper **“Robust ETF Tail-Risk Monitoring under Data Degradation and Market Uncertainty.”**
 
 ## Overview
 
-This repository implements a **quality-aware** and **uncertainty-aware** ETF tail-risk monitoring framework for next-day risk surveillance.
+This repository implements a quality-aware and uncertainty-aware framework for **next-day ETF tail-risk monitoring**.
 
-Instead of treating ETF tail-risk prediction as a stand-alone forecasting task, this project formulates it as a **service problem**. The system combines:
+The project treats ETF tail-risk surveillance as a **monitoring and reliability problem**, rather than only a stand-alone forecasting task. In addition to producing a next-day lower-tail risk estimate, the framework evaluates the condition of service-time inputs, diagnoses model uncertainty, and applies conservative fallback logic when reliability is weakened.
 
-- service-time data quality checks
-- lower-tail risk prediction
-- uncertainty diagnostics
-- conservative fallback and alert generation
+The framework is designed to remain operational under:
+- degraded or partially missing inputs
+- stale or inconsistent price records
+- changing market conditions
+- elevated predictive uncertainty
 
-The goal is not only to produce a next-day lower-tail risk estimate, but also to make monitoring outputs more reliable when **inputs degrade**, **market regimes shift**, or **model confidence weakens**.
+## Repository Structure
+
+- `main4.py`  
+  Main implementation of the proposed ETF tail-risk monitoring framework, including walk-forward evaluation, quality-aware monitoring, uncertainty diagnostics, conservative fallback rules, and quality-validation experiments.
+
+- `Comaprision_grach.py`  
+  Comparison script that extends the main framework with a **GJR-GARCH(1,1)-t VaR baseline** for benchmark evaluation.
+
+## Main Components
+
+The framework contains four linked layers:
+
+1. **Quality-control layer**  
+   Screens incoming records using service-time observable diagnostics such as missing values, stale prices, invalid OHLC relations, and anomalous trading activity.
+
+2. **Risk prediction layer**  
+   Produces next-day lower-tail risk estimates for ETF returns at the 5% VaR-type level.
+
+3. **Uncertainty layer**  
+   Aggregates model dispersion, out-of-distribution diagnostics, and recent monitoring deterioration into an uncertainty score.
+
+4. **Safe output layer**  
+   Applies conservative fallback logic to generate a safer reported VaR estimate together with an operational alert state.
 
 ## Main Features
 
-- Multi-ETF daily risk monitoring pipeline
-- Quality-control layer for missing fields, stale prices, invalid OHLC relations, and other service-time issues
-- Lower-tail prediction at the **5% VaR-type** level
-- Uncertainty layer based on:
-  - ensemble dispersion
-  - out-of-distribution diagnostics
-  - recent monitoring deterioration
-- Conservative fallback mechanism for safer operational outputs
-- Alert generation for daily monitoring
-- Validation under **synthetic input degradation**
-- Cross-asset and stress-period evaluation
+- Multi-ETF daily monitoring pipeline
+- Next-day lower-tail risk prediction
+- Service-time input quality checks
+- Uncertainty diagnostics for deployment reliability
+- Conservative fallback mechanism for safer outputs
+- Daily alert generation
+- Synthetic input degradation experiments
+- Cross-asset evaluation under stressed conditions
+- Benchmark comparison against GJR-GARCH(1,1)-t VaR
 
-## Method Summary
+## Data Requirements
 
-The framework contains four linked components:
+The code is designed to use the following input files:
 
-1. **Data and quality-control layer**  
-   Screens incoming records and computes quality states from service-time observable diagnostics.
+- `multiasset_daily_10y_panel_model.csv`
+- `VIXCLS.csv`
+- `zero_coupon_yield.csv`
 
-2. **Risk prediction layer**  
-   Produces next-day lower-tail risk estimates for ETF returns.
+Optional:
+- `VXVCLS.csv`
 
-3. **Uncertainty layer**  
-   Aggregates model disagreement, regime distance / OOD behavior, and recent drift into an uncertainty score.
+## Running the Code
 
-4. **Safe output layer**  
-   Combines the model-based estimate with conservative fallback logic to produce a safer operational VaR output and daily alert state.
+Update the base data directory in the configuration or set the corresponding environment path, then run:
 
+```bash
+python main4.py
