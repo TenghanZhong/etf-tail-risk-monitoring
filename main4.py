@@ -25,8 +25,6 @@ What is added relative to the baseline walk-forward service
        - uncertainty_low_safe_var
        - uncertainty_elevated_safe_var
        - uncertainty_low / uncertainty_elevated activation counts
-
-Designed for:
 - C:\\Users\\26876\\Desktop\\2026BIgdataservice
 - Files named:
     multiasset_daily_10y_panel_model.csv
@@ -34,9 +32,6 @@ Designed for:
     zero_coupon_yield.csv
 - Optional:
     VXVCLS.csv
-
-Author:
-OpenAI for Hanson
 """
 
 from __future__ import annotations
