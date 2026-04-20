@@ -53,9 +53,7 @@ warnings.filterwarnings("ignore")
 
 @dataclass
 class Config:
-    base_dir: Path = Path(
-        os.environ.get("BIGDATASERVICE_BASE_DIR", r"C:\Users\26876\Desktop\2026BIgdataservice")
-    )
+    BASE_DIR = Path(os.environ.get("ETF_TAIL_RISK_DATA_DIR", Path(__file__).resolve().parent))
     output_dir_name: str = "risk_monitoring_service_outputs_revised4_quality"
 
     # Risk target

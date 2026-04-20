@@ -6,7 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch
 
-BASE_DIR = Path(r"C:\Users\26876\Desktop\2026BIgdataservice\risk_monitoring_service_outputs_revised3")
+BASE_DIR = Path(os.environ.get("ETF_TAIL_RISK_DATA_DIR", Path(__file__).resolve().parent))
 DAILY_CSV = BASE_DIR / "daily_service_outputs.csv"
 MONTHLY_CSV = BASE_DIR / "monthly_service_summary.csv"
 FIG_DIR = BASE_DIR / "figures"
