@@ -28,8 +28,7 @@ What is added relative to the baseline walk-forward service
    the training window and forecasting next-day conditional volatility.
    The 5% VaR is computed as mu + sigma_t * t_inv(alpha, nu), where nu
    is the estimated degrees-of-freedom parameter.
-
-- C:\\Users\\26876\\Desktop\\2026BIgdataservice
+   
 - Files named:
     multiasset_daily_10y_panel_model.csv
     VIXCLS.csv
