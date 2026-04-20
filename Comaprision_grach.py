@@ -29,7 +29,6 @@ What is added relative to the baseline walk-forward service
    The 5% VaR is computed as mu + sigma_t * t_inv(alpha, nu), where nu
    is the estimated degrees-of-freedom parameter.
 
-Designed for:
 - C:\\Users\\26876\\Desktop\\2026BIgdataservice
 - Files named:
     multiasset_daily_10y_panel_model.csv
@@ -37,9 +36,6 @@ Designed for:
     zero_coupon_yield.csv
 - Optional:
     VXVCLS.csv
-
-Author:
-OpenAI for Hanson
 """
 
 from __future__ import annotations
