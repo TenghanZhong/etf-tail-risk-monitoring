@@ -18,7 +18,6 @@ What is added relative to the original script
    - quality_validation_summary.csv
    - quality_validation_key_metrics.csv
 
-- C:\\Users\\26876\\Desktop\\2026BIgdataservice
 - Files named:
     multiasset_daily_10y_panel_model.csv
     VIXCLS.csv
