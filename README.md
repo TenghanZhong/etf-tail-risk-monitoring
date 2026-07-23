@@ -1,104 +1,128 @@
-# ETF Tail-Risk Monitoring
+# Reliability-Aware ETF Tail-Risk Monitoring
 
-Code and experimental materials for the paper:
+Code and experimental materials for **Reliability-Aware ETF Tail-Risk Monitoring**, accepted at IEEE SMC 2026.
 
-**Reliability-Aware ETF Tail-Risk Monitoring under Data Degradation and Market Uncertainty**
+The repository implements a rolling walk-forward service for next-day ETF lower-tail risk monitoring. The pipeline combines input-quality diagnostics, bootstrap quantile prediction, uncertainty scoring, conservative fallback logic, and operational alerts. Additional experiments evaluate prediction-time data degradation and compare the service output with standard VaR benchmarks.
 
-## Overview
+## Repository structure
 
-This repository implements a quality-aware and uncertainty-aware framework for next-day ETF tail-risk monitoring.
+- `run_tail_risk_monitoring.py`: main experiment and component ablations.
+- `compare_gjr_garch.py`: GJR-GARCH(1,1)-t benchmark comparison.
+- `quality-layer.py`: focused input-quality validation experiment.
+- `plot.py`: figure-generation utilities.
+- `src/`: experiment implementation modules.
+- `Result/`: representative result tables and figures.
 
-Unlike a standard stand-alone VaR forecasting pipeline, this project treats ETF downside-risk estimation as a **monitoring and reliability problem**. In addition to producing a next-day lower-tail risk estimate, the framework evaluates service-time input quality, diagnoses predictive uncertainty, applies conservative fallback logic, and generates operational alert states.
+## Required data
 
-The framework is designed to remain usable under:
-
-- degraded or partially missing inputs
-- stale or inconsistent price records
-- changing market conditions
-- elevated predictive uncertainty
-
-## Repository Structure
-
-- `run_tail_risk_monitoring.py`  
-  Main implementation of the proposed ETF tail-risk monitoring framework, including walk-forward evaluation, quality-aware monitoring, uncertainty diagnostics, fallback logic, and evaluation summaries.
-
-- `compare_gjr_garch.py`  
-  Benchmark comparison script that evaluates the proposed framework against a GJR-GARCH(1,1)-t style VaR baseline.
-
-- `quality-layer.py`  
-  Quality-validation and corruption-analysis script for testing the effect of degraded service-time inputs on monitoring reliability.
-
-- `plot.py`  
-  Figure-generation utilities for producing paper-ready plots and diagrams from exported result files.
-
-- `multiasset_daily_10y_panel_model.csv`  
-  Main multi-ETF panel dataset used by the framework.
-
-- `VIXCLS.csv`  
-  VIX data used for market-state and stress-related features.
-
-- `zero_coupon_yield.csv`  
-  Zero-coupon yield curve data used in macro-financial feature construction.
-
-- `VXVCLS.csv`  
-  Optional auxiliary volatility index input.
-
-- `Result/`  
-  Example output folder containing representative result tables and figures.
-
-## Main Framework
-
-The monitoring framework contains four linked layers:
-
-### 1. Quality-Control Layer
-Screens incoming records using service-time observable diagnostics, including:
-
-- missing values
-- stale prices
-- invalid OHLC relations
-- jump-like abnormal returns
-- abnormal trading activity
-
-### 2. Risk Prediction Layer
-Produces next-day lower-tail risk estimates for ETF returns, targeting a 5% VaR-type threshold.
-
-### 3. Uncertainty Layer
-Builds an uncertainty score from multiple sources, including:
-
-- model dispersion
-- out-of-distribution diagnostics
-- recent monitoring deterioration
-
-### 4. Safe Output Layer
-Applies conservative fallback logic to generate a safer reported risk estimate together with an operational alert state.
-
-## Main Features
-
-- Multi-ETF daily monitoring pipeline
-- Next-day lower-tail risk estimation
-- Service-time input quality checks
-- Reliability-oriented uncertainty diagnostics
-- Conservative fallback mechanism
-- Daily operational alert generation
-- Synthetic input degradation experiments
-- Cross-asset evaluation under stressed conditions
-- Benchmark comparison against GJR-GARCH-style VaR
-
-## Data Requirements
-
-Place the following files in the repository root, or in a directory referenced by an environment variable if you later modify the path configuration:
+Place these files in the repository root or in the directory specified by `ETF_TAIL_RISK_DATA_DIR`:
 
 - `multiasset_daily_10y_panel_model.csv`
 - `VIXCLS.csv`
 - `zero_coupon_yield.csv`
 
-Optional:
+Optional input:
 
 - `VXVCLS.csv`
 
-## Environment Setup
+The ETF panel must contain `date`, `symbol`, OHLC prices, volume, returns, rolling volatility variables, range-based volatility proxies, and drawdown variables used by the source modules.
 
-Create a clean Python environment and install dependencies:
+## Environment setup
+
+Python 3.10 or later is recommended.
+
+### Linux and macOS
 
 ```bash
 python -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### Windows PowerShell
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+## Data-directory configuration
+
+Without an environment variable, the scripts read data from the repository root. A separate data directory can be supplied as follows.
+
+Linux and macOS:
+
+```bash
+export ETF_TAIL_RISK_DATA_DIR=/path/to/data
+```
+
+Windows PowerShell:
+
+```powershell
+$env:ETF_TAIL_RISK_DATA_DIR = "C:\path\to\data"
+```
+
+## Running the experiments
+
+Main monitoring experiment:
+
+```bash
+python run_tail_risk_monitoring.py
+```
+
+GJR-GARCH comparison:
+
+```bash
+python compare_gjr_garch.py
+```
+
+Quality-layer validation:
+
+```bash
+python quality-layer.py
+```
+
+Default output directories:
+
+- `results/`
+- `results_gjr_garch/`
+- `results_quality_validation/`
+
+## Generating figures
+
+`plot.py` reads `daily_service_outputs.csv` and `monthly_service_summary.csv` from the configured data directory.
+
+```bash
+python plot.py
+```
+
+Figures are written to the `figures/` subdirectory.
+
+## Main configuration
+
+The experiment modules use the following baseline settings:
+
+- 5% lower-tail target
+- 756-trading-day training window
+- 63-trading-day calibration window
+- 63-trading-day retraining interval
+- five bootstrap quantile models
+- 252-day and 63-day historical VaR windows
+- 15% row-level corruption probability in degradation experiments
+
+All model, fallback, alert, and corruption parameters are specified in the source modules.
+
+## Reproducibility notes
+
+- Training, calibration, and prediction periods are separated chronologically.
+- Calibration offsets use observations strictly preceding each prediction period.
+- Symbol-level uncertainty states use prior evaluable uncertainty scores only.
+- Synthetic faults are injected only into prediction-time observable inputs.
+- Corruption experiments use fixed seeds and fixed design parameters.
+
+## Output interpretation
+
+Safe VaR is a lower-tail return threshold. More negative values indicate a more conservative threshold. A breach occurs when the next-day realized return falls below the reported threshold. Alert states are operational diagnostics and are distinct from the low/elevated uncertainty split used in the empirical analysis.
