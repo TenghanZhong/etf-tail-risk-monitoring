@@ -1,35 +1,22 @@
 """
-Quality-Aware and Uncertainty-Aware ETF Risk Monitoring as a Big Data Service
-============================================================================
+ETF tail-risk monitoring with a GJR-GARCH(1,1)-t VaR comparison.
 
-Extended version with fallback/component experiments, paper-aligned
-uncertainty diagnostics, and GJR-GARCH(1,1)-t VaR baseline.
+Runs walk-forward backtests, clean-input and corrupted-input component
+comparisons, and a focused input-quality ablation. The latter exports
+quality_validation_summary.csv and quality_validation_key_metrics.csv.
 
-What is added relative to the baseline walk-forward service
------------------------------------------------------------
-1. Keeps the main walk-forward service backtest intact.
-2. Adds clean-input and corrupted-input fallback/component experiments.
-3. Restores the focused corrupted-input quality-validation ablation used by
-   the paper, exporting:
-       - quality_validation_summary.csv
-       - quality_validation_key_metrics.csv
-4. Preserves the original fixed-threshold uncertainty buckets only for
-   internal alert escalation, now exported as:
-       - uncertainty_flag_alert_legacy
-5. Adds the paper-facing diagnostic uncertainty state:
-       - uncertainty_state = rolling low / elevated
-   computed symbol-by-symbol from the rolling 90th percentile of prior
-   uncertainty scores, using up to the most recent 252 evaluable dates.
-6. Clears legacy uncertainty summaries from evaluation outputs by reporting:
-       - uncertainty_low_safe_var
-       - uncertainty_elevated_safe_var
-       - uncertainty_low / uncertainty_elevated activation counts
-7. **NEW**: Adds a GJR-GARCH(1,1)-t VaR baseline, estimated per-symbol on
-   the training window and forecasting next-day conditional volatility.
-   The 5% VaR is computed as mu + sigma_t * t_inv(alpha, nu), where nu
-   is the estimated degrees-of-freedom parameter.
-   
-- Files named:
+Fixed-threshold uncertainty buckets drive alert escalation and are exported
+as uncertainty_flag_alert_legacy. The separate uncertainty_state diagnostic
+classifies each symbol as low or elevated using the rolling 90th percentile
+of prior uncertainty scores over up to 252 evaluable dates. Evaluation
+summaries report uncertainty_low_safe_var, uncertainty_elevated_safe_var,
+and activation counts for the two states.
+
+The GJR-GARCH baseline is estimated per symbol on the training window and
+forecasts next-day conditional volatility. Its 5% VaR uses the fitted mean,
+conditional volatility, and a unit-variance Student-t quantile.
+
+Required files:
     multiasset_daily_10y_panel_model.csv
     VIXCLS.csv
     zero_coupon_yield.csv
@@ -89,7 +76,7 @@ class Config:
     pca_explained_variance: float = 0.95
     ood_quantile_ref: float = 0.95
 
-    # Paper-facing uncertainty diagnostics
+    # Rolling uncertainty diagnostics
     uncertainty_diag_window: int = 252
     uncertainty_diag_quantile: float = 0.90
 

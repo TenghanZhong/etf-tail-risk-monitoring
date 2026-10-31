@@ -1,31 +1,20 @@
 
 """
-Quality-Aware and Uncertainty-Aware ETF Risk Monitoring as a Big Data Service
-============================================================================
+ETF tail-risk monitoring with input-quality and uncertainty diagnostics.
 
-Extended version with fallback/component experiments and paper-aligned
-uncertainty diagnostics.
+Runs walk-forward backtests and fallback/component comparisons under clean
+and synthetically corrupted prediction-time inputs. The focused quality
+ablation exports quality_validation_summary.csv and
+quality_validation_key_metrics.csv.
 
-What is added relative to the baseline walk-forward service
------------------------------------------------------------
-1. Keeps the main walk-forward service backtest intact.
-2. Adds clean-input and corrupted-input fallback/component experiments.
-3. Restores the focused corrupted-input quality-validation ablation used by
-   the paper, exporting:
-       - quality_validation_summary.csv
-       - quality_validation_key_metrics.csv
-4. Preserves the original fixed-threshold uncertainty buckets only for
-   internal alert escalation, now exported as:
-       - uncertainty_flag_alert_legacy
-5. Adds the paper-facing diagnostic uncertainty state:
-       - uncertainty_state = rolling low / elevated
-   computed symbol-by-symbol from the rolling 90th percentile of prior
-   uncertainty scores, using up to the most recent 252 evaluable dates.
-6. Clears legacy uncertainty summaries from evaluation outputs by reporting:
-       - uncertainty_low_safe_var
-       - uncertainty_elevated_safe_var
-       - uncertainty_low / uncertainty_elevated activation counts
-- Files named:
+Fixed-threshold uncertainty buckets drive alert escalation and are exported
+as uncertainty_flag_alert_legacy. The separate uncertainty_state diagnostic
+classifies each symbol as low or elevated using the rolling 90th percentile
+of prior uncertainty scores over up to 252 evaluable dates. Evaluation
+summaries report uncertainty_low_safe_var, uncertainty_elevated_safe_var,
+and activation counts for the two states.
+
+Required files:
     multiasset_daily_10y_panel_model.csv
     VIXCLS.csv
     zero_coupon_yield.csv
@@ -79,7 +68,7 @@ class Config:
     pca_explained_variance: float = 0.95
     ood_quantile_ref: float = 0.95
 
-    # Paper-facing uncertainty diagnostics
+    # Rolling uncertainty diagnostics
     uncertainty_diag_window: int = 252
     uncertainty_diag_quantile: float = 0.90
 
@@ -489,8 +478,8 @@ def recompute_current_day_cross_asset_features(pred_df: pd.DataFrame) -> pd.Data
 def apply_prediction_time_corruption(pred_df: pd.DataFrame, cfg: Config, current_ts: pd.Timestamp) -> pd.DataFrame:
     """
     Apply service-time corruption only to the prediction rows for the current day.
-    This makes the experiment realistic: the model is still trained on historical data,
-    but the live input stream can be partially degraded.
+    The model remains trained on historical data while observable prediction inputs
+    are partially degraded by synthetic faults.
     """
     out = pred_df.copy()
     out["corruption_applied"] = 0
@@ -740,7 +729,7 @@ def add_uncertainty_diagnostic_state(
     cfg: Config,
 ) -> pd.DataFrame:
     """
-    Paper-facing diagnostic uncertainty state:
+    Rolling diagnostic uncertainty state:
     - computed symbol-by-symbol
     - uses strictly prior evaluable dates only
     - uses up to the most recent cfg.uncertainty_diag_window dates
@@ -1062,7 +1051,7 @@ def run_backtest(
         # Legacy fixed-threshold buckets kept only for alert escalation.
         pred_df["uncertainty_flag_alert_legacy"] = uncertainty_alert_flag_from_score(pred_df["uncertainty_score"])
 
-        # Paper-facing rolling low/elevated diagnostic state.
+        # Rolling low/elevated diagnostic state.
         pred_df = add_uncertainty_diagnostic_state(pred_df, results_so_far, cfg)
 
         pred_df = compute_fallback_design_predictions(pred_df, cfg)

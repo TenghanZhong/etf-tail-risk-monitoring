@@ -1,24 +1,14 @@
 
 """
-Quality-Aware and Uncertainty-Aware ETF Risk Monitoring as a Big Data Service
-============================================================================
+ETF tail-risk monitoring and prediction-time input-quality ablation.
 
-Extended version with a minimal but valuable quality-layer validation experiment.
+Compares the full monitoring pipeline with variants that omit the quality
+feature or quality-dependent fallback. Synthetic corruption affects only
+observable prediction-time inputs; training uses historical data. The
+experiment exports quality_validation_summary.csv and
+quality_validation_key_metrics.csv.
 
-What is added relative to the original script
----------------------------------------------
-1. Keeps the original walk-forward service backtest intact.
-2. Adds a small quality-validation experiment with three corrupted-input variants:
-   - corrupt_full_service
-   - corrupt_no_quality_feature
-   - corrupt_no_quality_fallback
-3. Corruption is applied only at prediction time (service-time observable inputs),
-   so the experiment mimics degraded live inputs rather than retraining on dirty data.
-4. Exports extra files:
-   - quality_validation_summary.csv
-   - quality_validation_key_metrics.csv
-
-- Files named:
+Required files:
     multiasset_daily_10y_panel_model.csv
     VIXCLS.csv
     zero_coupon_yield.csv
@@ -99,7 +89,7 @@ class Config:
     model_min_samples_leaf: int = 20
     model_l2_regularization: float = 1e-3
 
-    # Added: quality validation experiment
+    # Quality validation experiment
     run_quality_validation_experiment: bool = True
     corruption_rate: float = 0.15
     corruption_seed: int = 20260405
@@ -450,8 +440,8 @@ def rebuild_service_observable_features(df: pd.DataFrame) -> pd.DataFrame:
 def apply_prediction_time_corruption(pred_df: pd.DataFrame, cfg: Config, current_ts: pd.Timestamp) -> pd.DataFrame:
     """
     Apply service-time corruption only to the prediction rows for the current day.
-    This makes the experiment realistic: the model is still trained on historical data,
-    but the live input stream can be partially degraded.
+    The model remains trained on historical data while observable prediction inputs
+    are partially degraded by synthetic faults.
     """
     out = pred_df.copy()
     out["corruption_applied"] = 0
@@ -1227,7 +1217,7 @@ def main():
     print("-" * 100)
     print(summary.to_string(index=False))
 
-    # Added: quality-layer validation
+    # Quality-layer validation
     if cfg.run_quality_validation_experiment:
         print("=" * 100)
         print("QUALITY VALIDATION EXPERIMENT")
